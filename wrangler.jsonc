@@ -6,7 +6,7 @@
   "rules": [
     {
       "type": "Data",
-      "globs": ["**/*.ttf", "**/*.woff", "**/*.woff2"],
+      "globs": ["**/*.ttf", "**/*.woff", "**/*.woff2", "**/*.ico", "**/*.svg"],
       "fallthrough": true,
     },
   ],
