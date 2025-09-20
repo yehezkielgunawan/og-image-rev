@@ -15,8 +15,10 @@ initSync({ module });
 const renderer = new Renderer();
 
 // Load Plus Jakarta Sans fonts (Regular and Bold)
-import plusJakartaRegular from "../public/fonts/Inter,Plus_Jakarta_Sans/Plus_Jakarta_Sans/static/PlusJakartaSans-Regular.ttf";
-import plusJakartaBold from "../public/fonts/Inter,Plus_Jakarta_Sans/Plus_Jakarta_Sans/static/PlusJakartaSans-Bold.ttf";
+import plusJakartaRegular from "public/fonts/Inter,Plus_Jakarta_Sans/Plus_Jakarta_Sans/static/PlusJakartaSans-Regular.ttf";
+import plusJakartaBold from "public/fonts/Inter,Plus_Jakarta_Sans/Plus_Jakarta_Sans/static/PlusJakartaSans-Bold.ttf";
+import faviconIco from "public/favicon.ico";
+import yehezIconSvg from "public/yehez-icon.svg";
 
 renderer.loadFont(new Uint8Array(plusJakartaRegular as ArrayBuffer));
 
@@ -25,6 +27,16 @@ renderer.loadFont(new Uint8Array(plusJakartaBold as ArrayBuffer));
 const app = new Hono();
 
 app.get("/", (c) => c.text("OK"));
+app.get(
+  "/favicon.ico",
+  () =>
+    new Response(faviconIco as any, {
+      headers: {
+        "Content-Type": "image/x-icon",
+        "Cache-Control": "public, max-age=86400",
+      },
+    }),
+);
 
 app.get("/og", async (c) => {
   // Query parameters
@@ -35,8 +47,10 @@ app.get("/og", async (c) => {
   const social = (c.req.query("social") ?? "").trim() || "Twitter: @yehezgun";
   const imageUrl = (c.req.query("image") ?? "").trim();
 
-  // Optionally fetch the avatar image and convert to data URI
-  const avatarDataUri = imageUrl ? await fetchAsDataUri(imageUrl) : null;
+  // Optionally fetch the avatar image and convert to data URI; fallback to default yehez icon
+  const avatarDataUri = imageUrl
+    ? await fetchAsDataUri(imageUrl)
+    : toDataUriFromImported(yehezIconSvg, "image/svg+xml");
 
   // Build the layout (1200x630)
   const WIDTH = 1200;
@@ -177,13 +191,40 @@ async function fetchAsDataUri(url: string): Promise<string | null> {
   }
 }
 
-function arrayBufferToBase64(buf: ArrayBuffer): string {
+function arrayBufferToBase64(buf: ArrayBufferLike): string {
   let binary = "";
   const bytes = new Uint8Array(buf);
   const len = bytes.byteLength;
   for (let i = 0; i < len; i++) binary += String.fromCharCode(bytes[i]);
   // @ts-ignore btoa is available in Workers runtime
   return btoa(binary);
+}
+
+function toDataUriFromImported(asset: any, mime: string): string | null {
+  try {
+    if (typeof asset === "string") {
+      if (asset.startsWith("data:")) return asset;
+      // Treat as raw SVG string content when mime is svg
+      if (mime.includes("svg")) {
+        return `data:${mime};utf8,${encodeURIComponent(asset)}`;
+      }
+      return null;
+    }
+    if (asset instanceof ArrayBuffer) {
+      const base64 = arrayBufferToBase64(asset);
+      return `data:${mime};base64,${base64}`;
+    }
+    if (asset && typeof asset === "object" && "byteLength" in asset) {
+      const src = new Uint8Array(asset as ArrayBufferLike);
+      const copy = new Uint8Array(src.byteLength);
+      copy.set(src);
+      const base64 = arrayBufferToBase64(copy.buffer);
+      return `data:${mime};base64,${base64}`;
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 export default app;

@@ -6,17 +6,27 @@
  * directly to `new Uint8Array(...)` for Takumi font loading APIs.
  */
 
-declare module '*.ttf' {
+declare module "*.ttf" {
   const data: ArrayBuffer;
   export default data;
 }
 
-declare module '*.woff' {
+declare module "*.woff" {
   const data: ArrayBuffer;
   export default data;
 }
 
-declare module '*.woff2' {
+declare module "*.woff2" {
+  const data: ArrayBuffer;
+  export default data;
+}
+
+declare module "*.ico" {
+  const data: ArrayBuffer;
+  export default data;
+}
+
+declare module "*.svg" {
   const data: ArrayBuffer;
   export default data;
 }
