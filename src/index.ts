@@ -18,10 +18,8 @@ const renderer = new Renderer();
 import plusJakartaRegular from "public/fonts/Inter,Plus_Jakarta_Sans/Plus_Jakarta_Sans/static/PlusJakartaSans-Regular.ttf";
 import plusJakartaBold from "public/fonts/Inter,Plus_Jakarta_Sans/Plus_Jakarta_Sans/static/PlusJakartaSans-Bold.ttf";
 import faviconIco from "public/favicon.ico";
-import yehezIconSvg from "public/yehez-icon.svg";
 
 renderer.loadFont(new Uint8Array(plusJakartaRegular as ArrayBuffer));
-
 renderer.loadFont(new Uint8Array(plusJakartaBold as ArrayBuffer));
 
 const app = new Hono();
@@ -45,12 +43,14 @@ app.get("/og", async (c) => {
     (c.req.query("description") ?? "").trim() || "Description";
   const siteName = (c.req.query("siteName") ?? "").trim() || "yehezgun.com";
   const social = (c.req.query("social") ?? "").trim() || "Twitter: @yehezgun";
-  const imageUrl = (c.req.query("image") ?? "").trim();
 
-  // Optionally fetch the avatar image and convert to data URI; fallback to default yehez icon
-  const avatarDataUri = imageUrl
-    ? await fetchAsDataUri(imageUrl)
-    : toDataUriFromImported(yehezIconSvg, "image/svg+xml");
+  // Default image (Cloudinary) with optional override via ?image=
+  const defaultImageUrl =
+    "https://res.cloudinary.com/yehez/image/upload/v1646485864/yehez_avatar_transparent_swwqcq.png";
+  const imageUrl = (c.req.query("image") ?? defaultImageUrl).trim();
+
+  // Fetch the avatar image and convert to data URI (required for WASM)
+  const avatarDataUri = await fetchAsDataUri(imageUrl);
 
   // Build the layout (1200x630)
   const WIDTH = 1200;
@@ -58,103 +58,148 @@ app.get("/og", async (c) => {
 
   // Colors
   const bgPrimary = "#0f172a"; // slate-900-ish
-  const bgSecondary = "#334155"; // slate-700-ish for circle background
   const fgPrimary = "#f8fafc"; // slate-50-ish
   const fgSecondary = "#cbd5e1"; // slate-300-ish
 
   const PADDING = 64;
 
-  // Main composition:
-  // - Dark background
-  // - Left: Title, Description
-  // - Bottom-left: Site name
-  // - Right: Circle background + optional avatar image (masked circle)
-  // - Bottom-right: Social handle
+  // Flex-based composition:
+  // - Column root with padding and space-between
+  // - Row main area: text (flex column) on left, image on right
+  // - Footer row: site name left, social right
   const root = container({
     style: {
       width: WIDTH,
       height: HEIGHT,
       backgroundColor: bgPrimary,
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "space-between",
+      padding: PADDING,
     },
     children: [
-      // Right-side circle background
+      // Main row: text on the left, image on the right
       container({
         style: {
-          position: "absolute",
-          left: WIDTH - (PADDING + 300),
-          top: PADDING + 20,
-          width: 300,
-          height: 300,
-          backgroundColor: bgSecondary,
-          borderRadius: percentage(50),
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 48,
+          flexGrow: 1,
+          minHeight: 0,
         },
+        children: [
+          // Text column
+          container({
+            style: {
+              display: "flex",
+              flexDirection: "column",
+              gap: 24,
+              flexGrow: 1,
+              minWidth: 0, // allow content to shrink correctly
+            },
+            children: [
+              // Title
+              text(title, {
+                color: fgPrimary,
+                fontSize: 72,
+                fontFamily: "Plus Jakarta Sans",
+                fontWeight: 700,
+                lineHeight: 1.1,
+                maxWidth: 720,
+              }),
+
+              // Description
+              text(description, {
+                color: fgSecondary,
+                fontSize: 36,
+                fontFamily: "Plus Jakarta Sans",
+                fontWeight: 400,
+                lineHeight: 1.4,
+                maxWidth: 720,
+              }),
+            ],
+          }),
+
+          // Avatar on the right
+          ...(avatarDataUri
+            ? [
+                container({
+                  style: {
+                    width: 260,
+                    height: 260,
+                    borderRadius: percentage(50),
+                    backgroundColor: "#334155",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  },
+                  children: [
+                    imgNode({
+                      src: avatarDataUri,
+                      width: 200,
+                      height: 200,
+                      style: {
+                        borderRadius: percentage(50),
+                        objectFit: "cover",
+                      },
+                    }),
+                  ],
+                }),
+              ]
+            : []),
+        ],
       }),
 
-      // Optional avatar image (circular)
-      ...(avatarDataUri
-        ? [
-            imgNode({
-              src: avatarDataUri,
-              width: 240,
-              height: 240,
-              style: {
-                position: "absolute",
-                left: WIDTH - (PADDING + 270),
-                top: PADDING + 50,
-                borderRadius: percentage(50),
-              },
-            }),
-          ]
-        : []),
-
-      // Title
-      text(title, {
-        position: "absolute",
-        left: PADDING,
-        top: PADDING + 40,
-        color: fgPrimary,
-        fontSize: 72,
-        fontFamily: "Plus Jakarta Sans",
-        fontWeight: 700,
-        lineHeight: 1.1,
-        maxWidth: 620,
-      }),
-
-      // Description
-      text(description, {
-        position: "absolute",
-        left: PADDING,
-        top: PADDING + 160,
-        color: fgSecondary,
-        fontSize: 36,
-        fontFamily: "Plus Jakarta Sans",
-        fontWeight: 400,
-        lineHeight: 1.4,
-        maxWidth: 620,
-      }),
-
-      // Site Name (bottom-left)
-      text(siteName, {
-        position: "absolute",
-        left: PADDING,
-        top: HEIGHT - PADDING,
-        color: fgPrimary,
-        fontSize: 28,
-        fontFamily: "Plus Jakarta Sans",
-        fontWeight: 700,
-      }),
-
-      // Social (bottom-right)
-      text(social, {
-        position: "absolute",
-        left: WIDTH - (PADDING + 360),
-        top: HEIGHT - PADDING,
-        color: fgPrimary,
-        fontSize: 28,
-        fontFamily: "Plus Jakarta Sans",
-        fontWeight: 400,
-        maxWidth: 340,
-        textAlign: "right",
+      // Footer: site name (left) and social (right)
+      container({
+        style: {
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "flex-end",
+          gap: 24,
+        },
+        children: [
+          container({
+            style: {
+              display: "flex",
+              flexDirection: "row",
+              flexGrow: 1,
+              minWidth: 0,
+            },
+            children: [
+              text(siteName, {
+                color: fgPrimary,
+                fontSize: 28,
+                fontFamily: "Plus Jakarta Sans",
+                fontWeight: 700,
+                overflowWrap: "anywhere",
+              }),
+            ],
+          }),
+          container({
+            style: {
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "flex-end",
+              flexGrow: 1,
+              minWidth: 0,
+            },
+            children: [
+              text(social, {
+                color: fgPrimary,
+                fontSize: 28,
+                fontFamily: "Plus Jakarta Sans",
+                fontWeight: 400,
+                textAlign: "right",
+                overflowWrap: "anywhere",
+              }),
+            ],
+          }),
+        ],
       }),
     ],
   });
@@ -198,33 +243,6 @@ function arrayBufferToBase64(buf: ArrayBufferLike): string {
   for (let i = 0; i < len; i++) binary += String.fromCharCode(bytes[i]);
   // @ts-ignore btoa is available in Workers runtime
   return btoa(binary);
-}
-
-function toDataUriFromImported(asset: any, mime: string): string | null {
-  try {
-    if (typeof asset === "string") {
-      if (asset.startsWith("data:")) return asset;
-      // Treat as raw SVG string content when mime is svg
-      if (mime.includes("svg")) {
-        return `data:${mime};utf8,${encodeURIComponent(asset)}`;
-      }
-      return null;
-    }
-    if (asset instanceof ArrayBuffer) {
-      const base64 = arrayBufferToBase64(asset);
-      return `data:${mime};base64,${base64}`;
-    }
-    if (asset && typeof asset === "object" && "byteLength" in asset) {
-      const src = new Uint8Array(asset as ArrayBufferLike);
-      const copy = new Uint8Array(src.byteLength);
-      copy.set(src);
-      const base64 = arrayBufferToBase64(copy.buffer);
-      return `data:${mime};base64,${base64}`;
-    }
-    return null;
-  } catch {
-    return null;
-  }
 }
 
 export default app;
