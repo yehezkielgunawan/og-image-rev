@@ -14,13 +14,11 @@ initSync({ module });
 // Initialize a single renderer instance for the worker
 const renderer = new Renderer();
 
-// Load Plus Jakarta Sans fonts (Regular and Bold)
-import plusJakartaRegular from "public/fonts/Inter,Plus_Jakarta_Sans/Plus_Jakarta_Sans/static/PlusJakartaSans-Regular.ttf";
-import plusJakartaBold from "public/fonts/Inter,Plus_Jakarta_Sans/Plus_Jakarta_Sans/static/PlusJakartaSans-Bold.ttf";
+// Load Plus Jakarta Sans variable font (single file to avoid glyph mixing)
+import plusJakartaVar from "public/fonts/Inter,Plus_Jakarta_Sans/Plus_Jakarta_Sans/PlusJakartaSans-VariableFont_wght.ttf";
 import faviconIco from "public/favicon.ico";
 
-renderer.loadFont(new Uint8Array(plusJakartaRegular as ArrayBuffer));
-renderer.loadFont(new Uint8Array(plusJakartaBold as ArrayBuffer));
+renderer.loadFont(new Uint8Array(plusJakartaVar as ArrayBuffer));
 
 const app = new Hono();
 
