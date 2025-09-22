@@ -118,7 +118,7 @@ app.get("/og", async (c) => {
                 fontWeight: 400,
                 lineHeight: 1.4,
                 maxWidth: 720,
-                lineClamp: 2,
+                lineClamp: 3,
                 textOverflow: "ellipsis",
               }),
             ],
