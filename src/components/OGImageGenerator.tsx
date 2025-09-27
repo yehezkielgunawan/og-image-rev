@@ -151,7 +151,12 @@ export function OGImageGenerator() {
                 <button class="copy-button">Copy URL</button>
               </div>
               <div class="action-buttons">
-                <button class="open-button">Open in New Tab</button>
+                <a
+                  href="/og?title=Title&description=Description&siteName=yehezgun.com&social=Twitter: @yehezgun&image=https://res.cloudinary.com/yehez/image/upload/v1646485864/yehez_avatar_transparent_swwqcq.png"
+                  class="open-button"
+                >
+                  View Full Image
+                </a>
                 <a href="#" download="og-image.png" class="download-button">
                   Download Image
                 </a>
