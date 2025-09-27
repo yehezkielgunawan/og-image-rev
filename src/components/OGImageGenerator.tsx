@@ -115,8 +115,6 @@ export function OGImageGenerator() {
 
             <div class="action-buttons">
               <button class="reset-button">Reset to Default</button>
-              <button class="export-button">Export Config</button>
-              <button class="import-button">Import Config</button>
             </div>
           </div>
         </div>
@@ -154,6 +152,7 @@ export function OGImageGenerator() {
                 <a
                   href="/og?title=Title&description=Description&siteName=yehezgun.com&social=Twitter: @yehezgun&image=https://res.cloudinary.com/yehez/image/upload/v1646485864/yehez_avatar_transparent_swwqcq.png"
                   class="open-button"
+                  target="_blank"
                 >
                   View Full Image
                 </a>
