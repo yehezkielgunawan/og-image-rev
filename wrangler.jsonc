@@ -1,12 +1,19 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "og-image-rev",
-  "main": "src/index.ts",
+  "main": "src/index.tsx",
   "compatibility_date": "2025-09-20",
   "rules": [
     {
       "type": "Data",
-      "globs": ["**/*.ttf", "**/*.woff", "**/*.woff2", "**/*.ico", "**/*.svg"],
+      "globs": [
+        "**/*.ttf",
+        "**/*.woff",
+        "**/*.woff2",
+        "**/*.ico",
+        "**/*.svg",
+        "**/*.css",
+      ],
       "fallthrough": true,
     },
   ],
