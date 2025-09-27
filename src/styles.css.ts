@@ -169,9 +169,7 @@ body {
     flex-wrap: wrap;
 }
 
-.reset-button,
-.export-button,
-.import-button {
+.reset-button {
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     font-size: 0.875rem;

@@ -20,6 +20,7 @@ const renderer = new Renderer();
 // Load Plus Jakarta Sans variable font (single file to avoid glyph mixing)
 import plusJakartaVar from "public/fonts/Inter,Plus_Jakarta_Sans/Plus_Jakarta_Sans/PlusJakartaSans-VariableFont_wght.ttf";
 import faviconIco from "public/favicon.ico";
+import iconSvg from "public/yehez-icon.svg";
 
 renderer.loadFont(new Uint8Array(plusJakartaVar as ArrayBuffer));
 
@@ -31,18 +32,78 @@ app.use(
   jsxRenderer(
     ({ children }) => {
       return (
-        <html>
+        <html lang="en">
           <head>
             <meta charset="utf-8" />
             <meta
               name="viewport"
               content="width=device-width, initial-scale=1.0"
             />
-            <title>OG Image Generator</title>
+            <title>
+              OG Image Generator - Create Beautiful Open Graph Images
+            </title>
             <meta
               name="description"
-              content="Create beautiful Open Graph images for your website"
+              content="Create beautiful Open Graph images for your website with our easy-to-use generator. Customize title, description, and branding for perfect social media previews."
             />
+            <meta name="author" content="Yehezkiel Gunawan" />
+            <meta
+              name="keywords"
+              content="og image generator, open graph, social media, meta tags, seo, twitter cards"
+            />
+
+            {/* Favicon and Icons */}
+            <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+            <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+            <link rel="apple-touch-icon" href="/icon.svg" />
+
+            {/* Theme and PWA */}
+            <meta name="theme-color" content="#0f172a" />
+            <meta name="color-scheme" content="dark light" />
+
+            {/* Open Graph / Social Media */}
+            <meta property="og:type" content="website" />
+            <meta
+              property="og:title"
+              content="OG Image Generator - Create Beautiful Open Graph Images"
+            />
+            <meta
+              property="og:description"
+              content="Create beautiful Open Graph images for your website with our easy-to-use generator. Customize title, description, and branding for perfect social media previews."
+            />
+            <meta
+              property="og:image"
+              content="/og?title=OG%20Image%20Generator&description=Create%20beautiful%20Open%20Graph%20images%20for%20your%20website"
+            />
+            <meta
+              property="og:url"
+              content="https://og-image-rev.yehezkielgunawan.workers.dev/"
+            />
+            <meta property="og:site_name" content="OG Image Generator" />
+
+            {/* Twitter Cards */}
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:creator" content="@yehezgun" />
+            <meta
+              name="twitter:title"
+              content="OG Image Generator - Create Beautiful Open Graph Images"
+            />
+            <meta
+              name="twitter:description"
+              content="Create beautiful Open Graph images for your website with our easy-to-use generator. Customize title, description, and branding for perfect social media previews."
+            />
+            <meta
+              name="twitter:image"
+              content="/og?title=OG%20Image%20Generator&description=Create%20beautiful%20Open%20Graph%20images%20for%20your%20website"
+            />
+
+            {/* Robots and SEO */}
+            <meta name="robots" content="index, follow" />
+            <link
+              rel="canonical"
+              href="https://og-image-rev.yehezkielgunawan.workers.dev/"
+            />
+
             <link rel="stylesheet" href="/styles.css" />
           </head>
           <body>{children}</body>
@@ -224,12 +285,26 @@ app.get("/styles.css", async (c) => {
 
 // Health check
 app.get("/health", (c) => c.text("OK"));
+
+// Serve favicon
 app.get(
   "/favicon.ico",
   () =>
     new Response(faviconIco as any, {
       headers: {
         "Content-Type": "image/x-icon",
+        "Cache-Control": "public, max-age=86400",
+      },
+    }),
+);
+
+// Serve SVG icon
+app.get(
+  "/icon.svg",
+  () =>
+    new Response(iconSvg as any, {
+      headers: {
+        "Content-Type": "image/svg+xml",
         "Cache-Control": "public, max-age=86400",
       },
     }),
