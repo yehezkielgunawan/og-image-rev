@@ -1,0 +1,96 @@
+{
+  "examples": [
+    {
+      "name": "Tech Blog Post",
+      "config": {
+        "title": "Building Modern Web Applications",
+        "description": "A comprehensive guide to using the latest web technologies and best practices for scalable applications",
+        "siteName": "DevBlog",
+        "social": "Twitter: @devblog",
+        "image": "https://res.cloudinary.com/yehez/image/upload/v1646485864/yehez_avatar_transparent_swwqcq.png"
+      }
+    },
+    {
+      "name": "Product Launch",
+      "config": {
+        "title": "Introducing AI-Powered Analytics",
+        "description": "Revolutionary insights platform that transforms your data into actionable business intelligence",
+        "siteName": "DataCorp",
+        "social": "LinkedIn: /company/datacorp",
+        "image": "https://res.cloudinary.com/yehez/image/upload/v1646485864/yehez_avatar_transparent_swwqcq.png"
+      }
+    },
+    {
+      "name": "Conference Event",
+      "config": {
+        "title": "WebDev Summit 2024",
+        "description": "Join 500+ developers for 3 days of workshops, talks, and networking in San Francisco",
+        "siteName": "WebDev Summit",
+        "social": "Register: webdevsummit.com",
+        "image": "https://res.cloudinary.com/yehez/image/upload/v1646485864/yehez_avatar_transparent_swwqcq.png"
+      }
+    },
+    {
+      "name": "Portfolio Showcase",
+      "config": {
+        "title": "Creative Developer Portfolio",
+        "description": "Showcasing innovative web experiences and digital solutions for modern brands",
+        "siteName": "John Smith Design",
+        "social": "Dribbble: @johnsmith",
+        "image": "https://res.cloudinary.com/yehez/image/upload/v1646485864/yehez_avatar_transparent_swwqcq.png"
+      }
+    },
+    {
+      "name": "Course Launch",
+      "config": {
+        "title": "Master React in 30 Days",
+        "description": "Complete hands-on course covering React hooks, state management, testing, and deployment",
+        "siteName": "CodeAcademy Pro",
+        "social": "YouTube: @codeacademypro",
+        "image": "https://res.cloudinary.com/yehez/image/upload/v1646485864/yehez_avatar_transparent_swwqcq.png"
+      }
+    },
+    {
+      "name": "Startup Announcement",
+      "config": {
+        "title": "Revolutionizing Remote Work",
+        "description": "Introducing the platform that seamlessly connects distributed teams with AI-powered collaboration tools",
+        "siteName": "RemoteFlow",
+        "social": "Follow us @remoteflow",
+        "image": "https://res.cloudinary.com/yehez/image/upload/v1646485864/yehez_avatar_transparent_swwqcq.png"
+      }
+    },
+    {
+      "name": "Newsletter Feature",
+      "config": {
+        "title": "Weekly Web Dev Digest #42",
+        "description": "Latest trends, tools, and tutorials in web development - curated for busy developers",
+        "siteName": "Web Dev Weekly",
+        "social": "Subscribe: webdevweekly.io",
+        "image": "https://res.cloudinary.com/yehez/image/upload/v1646485864/yehez_avatar_transparent_swwqcq.png"
+      }
+    },
+    {
+      "name": "Open Source Project",
+      "config": {
+        "title": "Lightning-Fast Build Tool",
+        "description": "Open source bundler that reduces build times by 10x while maintaining full compatibility",
+        "siteName": "FastBuild",
+        "social": "GitHub: @fastbuild/core",
+        "image": "https://res.cloudinary.com/yehez/image/upload/v1646485864/yehez_avatar_transparent_swwqcq.png"
+      }
+    }
+  ],
+  "usage_instructions": {
+    "import_single": "Copy one config object and paste into the import dialog",
+    "import_multiple": "Save any config as a .json file and use the import button",
+    "customize": "Modify any values to match your brand and content",
+    "image_urls": "Replace image URLs with your own avatar or logo"
+  },
+  "tips": {
+    "title_length": "Keep titles under 60 characters for optimal display",
+    "description_length": "Descriptions work best between 100-150 characters",
+    "image_size": "Use images at least 400x400px for best quality",
+    "testing": "Always test your OG images across different social platforms"
+  }
+}
