@@ -18,6 +18,17 @@ This project exposes a single API endpoint to render 1200x630 OG images with con
 - Generate/sync Worker types
   - `pnpm cf-typegen`
 
+## Testing
+
+- Run tests in watch mode
+  - `pnpm test`
+- Run tests once (CI)
+  - `pnpm test:run`
+
+Notes:
+- Tests use Vitest and run in a Node environment; external modules like WASM and binary/font assets are mocked.
+- Core routes are covered, including `/`, `/styles.css`, `/health`, `/favicon.ico`, `/icon.svg`, and `/og` with both successful and failed image fetch scenarios.
+
 ## API
 
 ### GET /og
