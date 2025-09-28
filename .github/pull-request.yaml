@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  next:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
