@@ -159,6 +159,7 @@ app.get("/", (c) => {
 
             const params = new URLSearchParams(formData);
             const previewUrl = '/og?' + params.toString() + '&t=' + Date.now();
+            const fullUrl = window.location.origin + '/og?' + params.toString();
 
             const loadingDiv = document.querySelector('.loading-spinner');
             if (loadingDiv) loadingDiv.style.display = 'block';
@@ -173,7 +174,13 @@ app.get("/", (c) => {
 
             const urlInput = document.querySelector('.url-input');
             if (urlInput) {
-              urlInput.value = window.location.origin + '/og?' + params.toString();
+              urlInput.value = fullUrl;
+            }
+
+            const openButton = document.querySelector('.open-button');
+            if (openButton) {
+              openButton.setAttribute('href', fullUrl);
+              openButton.setAttribute('rel', 'noopener');
             }
           }
 
