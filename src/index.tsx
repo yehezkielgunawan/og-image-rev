@@ -174,6 +174,19 @@ app.get(
     }),
 );
 
+// Handle CORS preflight for /og endpoint
+app.options("/og", (c) => {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Max-Age": "86400",
+    },
+  });
+});
+
 app.get("/og", async (c) => {
   // Query parameters
   const title = (c.req.query("title") ?? "").trim() || "Title";
@@ -190,9 +203,9 @@ app.get("/og", async (c) => {
   // Fetch the avatar image and convert to data URI (required for WASM)
   const avatarDataUri = await fetchAsDataUri(imageUrl);
 
-  // Build the layout (1200x630)
+  // use Linkedin/Twitter OG image size standard 1200x627
   const WIDTH = 1200;
-  const HEIGHT = 630;
+  const HEIGHT = 627;
 
   // Colors
   const bgPrimary = "#0f172a"; // slate-900-ish
@@ -356,7 +369,16 @@ app.get("/og", async (c) => {
   return new Response(body, {
     headers: {
       "Content-Type": "image/png",
-      "Cache-Control": "public, max-age=60",
+      // LinkedIn recommends longer cache for OG images (1 hour = 3600s)
+      "Cache-Control":
+        "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+      // CORS headers for broader crawler compatibility
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      // Security headers
+      "X-Content-Type-Options": "nosniff",
+      // Content length helps LinkedIn validate the response
+      "Content-Length": body.byteLength.toString(),
     },
   });
 });
@@ -364,7 +386,13 @@ app.get("/og", async (c) => {
 // Helper: fetch URL and convert to data URI for Takumi WASM
 async function fetchAsDataUri(url: string): Promise<string | null> {
   try {
-    const res = await fetch(url);
+    // Add timeout to prevent slow responses (LinkedIn timeout is ~5s)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000); // 4s timeout
+
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
     if (!res.ok) return null;
 
     const contentType =
