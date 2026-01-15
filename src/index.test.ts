@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest';
 
-// Mock WASM module and binary import BEFORE importing the app
+// Mock WASM module BEFORE importing the app
+// Virtual modules (wasm, fonts, assets) are aliased in vitest.config.ts
 vi.mock('@takumi-rs/wasm', () => {
   class MockRenderer {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -13,29 +14,10 @@ vi.mock('@takumi-rs/wasm', () => {
   };
 });
 
-vi.mock(
-  '@takumi-rs/wasm/takumi_wasm_bg.wasm',
-  () => ({ default: new ArrayBuffer(8) }),
-  { virtual: true },
-);
-
-// Mock public assets used at import time
-vi.mock(
-  'public/fonts/Inter,Plus_Jakarta_Sans/Plus_Jakarta_Sans/PlusJakartaSans-VariableFont_wght.ttf',
-  () => ({ default: new ArrayBuffer(16) }),
-  { virtual: true },
-);
-vi.mock('public/favicon.ico', () => ({ default: new Uint8Array([0, 1, 2, 3]) }), {
-  virtual: true,
-});
-vi.mock('public/yehez-icon.svg', () => ({ default: new TextEncoder().encode('<svg/>') }), {
-  virtual: true,
-});
-
 // Import the app after mocks
 let app: any;
 beforeAll(async () => {
-  const mod = await import('./index.tsx');
+  const mod = await import('./index');
   app = mod.default;
 });
 
