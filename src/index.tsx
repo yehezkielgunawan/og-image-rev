@@ -113,8 +113,8 @@ app.use(
     },
     {
       docType: true,
-    },
-  ),
+    }
+  )
 );
 
 // Main UI route
@@ -123,7 +123,7 @@ app.get("/", (c) => {
     <div>
       <OGImageGenerator />
       <script src="/app.js" defer></script>
-    </div>,
+    </div>
   );
 });
 
@@ -159,7 +159,7 @@ app.get(
         "Content-Type": "image/x-icon",
         "Cache-Control": "public, max-age=86400",
       },
-    }),
+    })
 );
 
 // Serve SVG icon
@@ -171,7 +171,7 @@ app.get(
         "Content-Type": "image/svg+xml",
         "Cache-Control": "public, max-age=86400",
       },
-    }),
+    })
 );
 
 // Handle CORS preflight for /og endpoint
@@ -360,7 +360,11 @@ app.get("/og", async (c) => {
   });
 
   // Render image (PNG)
-  const png = renderer.render(root, WIDTH, HEIGHT, "png");
+  const png = renderer.render(root, {
+    width: WIDTH,
+    height: HEIGHT,
+    format: "png",
+  });
 
   // Ensure Response body uses ArrayBuffer-backed Uint8Array
   const body = new Uint8Array(png.byteLength);
