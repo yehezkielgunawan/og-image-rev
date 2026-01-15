@@ -9,8 +9,8 @@ import {
 } from "@takumi-rs/helpers";
 import { jsxRenderer } from "hono/jsx-renderer";
 import { OGImageGenerator } from "./components/OGImageGenerator";
+import { ClientScript } from "./components/ClientScript";
 import { cssStyles } from "./styles.css.js";
-import { appScript } from "./app.script.js";
 
 // Initialize Takumi WASM
 initSync({ module });
@@ -122,7 +122,7 @@ app.get("/", (c) => {
   return c.render(
     <div>
       <OGImageGenerator />
-      <script src="/app.js" defer></script>
+      <ClientScript />
     </div>
   );
 });
@@ -132,16 +132,6 @@ app.get("/styles.css", async (c) => {
   return new Response(cssStyles, {
     headers: {
       "Content-Type": "text/css",
-      "Cache-Control": "public, max-age=3600",
-    },
-  });
-});
-
-// Serve client app script
-app.get("/app.js", async (c) => {
-  return new Response(appScript, {
-    headers: {
-      "Content-Type": "application/javascript; charset=utf-8",
       "Cache-Control": "public, max-age=3600",
     },
   });

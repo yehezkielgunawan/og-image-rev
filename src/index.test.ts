@@ -41,13 +41,16 @@ describe('routes', () => {
     expect(body).toContain('.og-generator');
   });
 
-  it('GET / returns HTML with generator content', async () => {
+  it('GET / returns HTML with generator content and inline script', async () => {
     const res = await app.request('/');
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type') || '').toContain('text/html');
     const html = await res.text();
     expect(html).toContain('OG Image Generator');
     expect(html).toMatch(/<link\s+rel="stylesheet"\s+href="\/styles\.css"/);
+    // Check for inline script with form field IDs
+    expect(html).toContain('FORM_FIELD_IDS');
+    expect(html).toContain('updatePreview');
   });
 
   it('GET /favicon.ico returns icon bytes', async () => {
