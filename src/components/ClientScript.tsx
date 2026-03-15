@@ -7,6 +7,7 @@ const presets = {
     description: "This is a sample description for the OG image",
     siteName: "yehezgun.com",
     social: "Twitter: @yehezgun",
+    cta: "Read more →",
     image:
       "https://res.cloudinary.com/yehez/image/upload/v1646485864/yehez_avatar_transparent_swwqcq.png",
   },
@@ -15,6 +16,7 @@ const presets = {
     description: "A comprehensive guide to building web applications",
     siteName: "Tech Blog",
     social: "Follow us @techblog",
+    cta: "Read the article →",
     image:
       "https://res.cloudinary.com/yehez/image/upload/v1646485864/yehez_avatar_transparent_swwqcq.png",
   },
@@ -23,6 +25,7 @@ const presets = {
     description: "Revolutionary features that will change how you work",
     siteName: "ProductCorp",
     social: "LinkedIn: /company/productcorp",
+    cta: "Learn more →",
     image:
       "https://res.cloudinary.com/yehez/image/upload/v1646485864/yehez_avatar_transparent_swwqcq.png",
   },
@@ -31,13 +34,14 @@ const presets = {
     description: "Join us for three days of learning and innovation",
     siteName: "DevConf 2024",
     social: "Register at devconf.com",
+    cta: "Register now →",
     image:
       "https://res.cloudinary.com/yehez/image/upload/v1646485864/yehez_avatar_transparent_swwqcq.png",
   },
 };
 
 // Field IDs that should be included in the OG URL
-const FORM_FIELD_IDS = ["title", "description", "siteName", "social", "image"];
+const FORM_FIELD_IDS = ["title", "description", "siteName", "social", "cta", "image"];
 
 export function ClientScript() {
   // Using raw() to inject inline script - this is the Hono way to embed scripts in JSX

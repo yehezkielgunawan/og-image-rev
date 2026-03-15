@@ -4,6 +4,7 @@ export function OGImageGenerator() {
     description: "Description",
     siteName: "yehezgun.com",
     social: "Twitter: @yehezgun",
+    cta: "Read more →",
     image:
       "https://res.cloudinary.com/yehez/image/upload/v1646485864/yehez_avatar_transparent_swwqcq.png",
   };
@@ -83,6 +84,25 @@ export function OGImageGenerator() {
                 Your social media handle or contact
               </p>
               <div class="character-count">18/50</div>
+            </div>
+
+            <div class="form-field">
+              <label for="cta" class="form-label">
+                Call to Action
+              </label>
+              <input
+                id="cta"
+                type="text"
+                value={defaultValues.cta}
+                placeholder="Read more →"
+                class="form-input"
+                maxLength={40}
+              />
+              <p class="form-description">
+                Button text to encourage clicks (e.g. "Read more →", "Learn
+                more")
+              </p>
+              <div class="character-count">12/40</div>
             </div>
 
             <div class="form-field">
