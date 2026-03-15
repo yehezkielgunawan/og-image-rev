@@ -113,8 +113,8 @@ app.use(
     },
     {
       docType: true,
-    }
-  )
+    },
+  ),
 );
 
 // Main UI route
@@ -123,7 +123,7 @@ app.get("/", (c) => {
     <div>
       <OGImageGenerator />
       <ClientScript />
-    </div>
+    </div>,
   );
 });
 
@@ -149,7 +149,7 @@ app.get(
         "Content-Type": "image/x-icon",
         "Cache-Control": "public, max-age=86400",
       },
-    })
+    }),
 );
 
 // Serve SVG icon
@@ -161,7 +161,7 @@ app.get(
         "Content-Type": "image/svg+xml",
         "Cache-Control": "public, max-age=86400",
       },
-    })
+    }),
 );
 
 // Handle CORS preflight for /og endpoint
@@ -184,6 +184,7 @@ app.get("/og", async (c) => {
     (c.req.query("description") ?? "").trim() || "Description";
   const siteName = (c.req.query("siteName") ?? "").trim() || "yehezgun.com";
   const social = (c.req.query("social") ?? "").trim() || "Twitter: @yehezgun";
+  const cta = (c.req.query("cta") ?? "").trim();
 
   // Default image (Cloudinary) with optional override via ?image=
   const defaultImageUrl =
@@ -193,14 +194,15 @@ app.get("/og", async (c) => {
   // Fetch the avatar image and convert to data URI (required for WASM)
   const avatarDataUri = await fetchAsDataUri(imageUrl);
 
-  // use Linkedin/Twitter OG image size standard 1200x627
+  // use Linkedin/Twitter OG image size standard 1200x630
   const WIDTH = 1200;
-  const HEIGHT = 627;
+  const HEIGHT = 630;
 
   // Colors
   const bgPrimary = "#0f172a"; // slate-900-ish
   const fgPrimary = "#f8fafc"; // slate-50-ish
   const fgSecondary = "#cbd5e1"; // slate-300-ish
+  const accentColor = "#3b82f6"; // blue-500
 
   const PADDING = 64;
 
@@ -264,6 +266,33 @@ app.get("/og", async (c) => {
                 lineClamp: 3,
                 textOverflow: "ellipsis",
               }),
+
+              ...(cta
+                ? [
+                    container({
+                      style: {
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        alignSelf: "flex-start",
+                        backgroundColor: accentColor,
+                        borderRadius: 24,
+                        paddingTop: 10,
+                        paddingBottom: 10,
+                        paddingLeft: 28,
+                        paddingRight: 28,
+                      },
+                      children: [
+                        text(cta, {
+                          color: fgPrimary,
+                          fontSize: 28,
+                          fontFamily: "Plus Jakarta Sans",
+                          fontWeight: 600,
+                        }),
+                      ],
+                    }),
+                  ]
+                : []),
             ],
           }),
 
