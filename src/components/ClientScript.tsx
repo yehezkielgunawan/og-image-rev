@@ -82,7 +82,6 @@ export function ClientScript() {
   function updatePreview() {
     const ogPath = buildOgUrl();
     const fullUrl = window.location.origin + ogPath;
-    const cacheBustUrl = ogPath + '&t=' + Date.now();
 
     // Update loading state
     const loadingDiv = document.querySelector('.loading-spinner');
@@ -91,7 +90,7 @@ export function ClientScript() {
     // Update preview image
     const img = document.querySelector('.preview-image');
     if (img) {
-      img.src = cacheBustUrl;
+      img.src = ogPath;
       img.onload = () => {
         if (loadingDiv) loadingDiv.style.display = 'none';
       };
@@ -114,7 +113,7 @@ export function ClientScript() {
     // Update download button
     const downloadButton = document.querySelector('.download-button');
     if (downloadButton) {
-      downloadButton.href = cacheBustUrl;
+      downloadButton.href = ogPath;
     }
   }
 
