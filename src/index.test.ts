@@ -1,12 +1,14 @@
 import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest';
 
+const { renderMock } = vi.hoisted(() => ({
+  renderMock: vi.fn(async () => new Uint8Array(10)),
+}));
+
 // Mock WASM module BEFORE importing the app
 // Virtual modules (wasm, fonts, assets) are aliased in vitest.config.ts
 vi.mock('@takumi-rs/wasm', () => {
   class MockRenderer {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    loadFont(_data: Uint8Array) {}
-    render = vi.fn(() => new Uint8Array(10));
+    render = renderMock;
   }
   return {
     initSync: vi.fn(),
@@ -22,7 +24,9 @@ beforeAll(async () => {
 });
 
 afterEach(() => {
-  vi.resetAllMocks();
+  vi.clearAllMocks();
+  renderMock.mockResolvedValue(new Uint8Array(10));
+  vi.unstubAllGlobals();
 });
 
 describe('routes', () => {
@@ -51,6 +55,8 @@ describe('routes', () => {
     // Check for inline script with form field IDs
     expect(html).toContain('FORM_FIELD_IDS');
     expect(html).toContain('updatePreview');
+    expect(html).not.toContain('Date.now()');
+    expect(html).not.toContain("&t=");
   });
 
   it('GET /favicon.ico returns icon bytes', async () => {
@@ -97,5 +103,50 @@ describe('routes', () => {
     expect(res.headers.get('content-type')).toBe('image/png');
     const data = new Uint8Array(await res.arrayBuffer());
     expect(data.byteLength).toBeGreaterThan(0);
+  });
+
+  it('GET /og rejects oversized text before fetching an image', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const res = await app.request(`/og?title=${'x'.repeat(101)}`);
+
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({
+      error: 'title exceeds the maximum length',
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('GET /og rejects an unsafe image URL before fetching it', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const res = await app.request('/og?image=http://example.com/avatar.png');
+
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({
+      error: 'image must be a valid HTTPS image URL',
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('GET /og returns a stable error when rendering fails', async () => {
+    renderMock.mockRejectedValueOnce(new Error('render failed'));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(new Uint8Array([1, 2, 3]), {
+          status: 200,
+          headers: { 'Content-Type': 'image/png' },
+        }),
+      ),
+    );
+
+    const res = await app.request('/og');
+
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ error: 'Unable to render image' });
+    expect(res.headers.get('cache-control')).toBe('no-store');
   });
 });

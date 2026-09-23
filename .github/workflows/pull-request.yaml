@@ -29,5 +29,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run tests
+      - name: Typecheck application
+        run: pnpm typecheck
+
+      - name: Typecheck Workers tests
+        run: pnpm typecheck:workers
+
+      - name: Run Node tests
         run: pnpm test:run
+
+      - name: Run Workers tests
+        run: pnpm test:workers
+
+      - name: Validate Worker bundle
+        run: pnpm exec wrangler deploy --dry-run --minify

@@ -9,11 +9,10 @@
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
     "allowArbitraryExtensions": true,
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "src/*": ["src/*"],
-      "public/*": ["public/*"]
+      "@/*": ["./src/*"],
+      "src/*": ["./src/*"],
+      "public/*": ["./public/*"]
     }
   }
 }

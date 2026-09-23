@@ -2,7 +2,14 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "og-image-rev",
   "main": "src/index.tsx",
-  "compatibility_date": "2025-09-20",
+  "compatibility_date": "2026-09-23",
+  "cache": {
+    "enabled": true,
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
   "rules": [
     {
       "type": "Data",

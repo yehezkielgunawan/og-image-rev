@@ -4,11 +4,11 @@ import { resolve } from 'node:path';
 export default defineConfig({
   test: {
     environment: 'node',
-    include: ['**/*.test.{ts,tsx}'],
+    include: ['src/**/*.test.{ts,tsx}'],
     globals: true,
     watch: false,
     alias: {
-      '@takumi-rs/wasm/takumi_wasm_bg.wasm': resolve(
+      '@takumi-rs/wasm/auto': resolve(
         import.meta.dirname,
         'src/__mocks__/takumi_wasm_bg.wasm.ts'
       ),
