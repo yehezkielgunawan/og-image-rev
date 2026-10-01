@@ -7,6 +7,14 @@ Open Graph images and personalized digital greeting cards, powered by:
 
 The web app offers two editors: Open Graph images at `/`, and **Greeting Card Studio** at `/cards`. Both generate PNGs using the same Worker and WASM renderer.
 
+## Install as an app
+
+**Yehez Image Studio** supports installation through the browser’s install menu on supported desktop and mobile browsers. On iPhone/iPad, use Safari’s **Share → Add to Home Screen**. Installation requires HTTPS (localhost works for development).
+
+After the first online visit finishes installing the service worker, offline navigation to either editor shows a branded fallback page with a retry link. Image generation and downloads require an internet connection; the service worker does not cache editor pages, generated images, or rendering requests. Updates activate through the normal service-worker lifecycle after existing app tabs close.
+
+PWA routes live in `src/pwa/`: `/manifest.webmanifest`, `/sw.js`, `/offline`, and `/icons/*.png`. The shared SVG logo is `public/studio-logo.svg`, served at `/icon.svg` and used in both editors. Its raster variants live in `public/icons/`, with a padded maskable icon and an Apple touch icon; `public/favicon.ico` uses the same mark. When changing the logo, regenerate the raster variants and favicon. When changing precached branding or offline content, bump the cache version in `src/pwa/service-worker.ts`.
+
 ## Greeting Card Studio
 
 Open `/cards`, choose an occasion, template, color palette, and format, then personalize your heading, message, recipient, and sender. Preview changes automatically and download the finished PNG.
