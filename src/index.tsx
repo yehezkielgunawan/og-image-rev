@@ -13,6 +13,8 @@ import { renderCardImage } from "./cards/render";
 import { GreetingCardGenerator } from "./components/GreetingCardGenerator";
 import { GreetingCardClientScript } from "./components/GreetingCardClientScript";
 import { GeneratorNavigation } from "./components/GeneratorNavigation";
+import { PwaClientScript } from "./components/PwaClientScript";
+import { createPwaRoutes } from "./pwa/routes";
 
 // Initialize Takumi WASM
 initSync({ module: wasmModule });
@@ -23,11 +25,12 @@ const renderer = new Renderer();
 // Load Plus Jakarta Sans variable font (single file to avoid glyph mixing)
 import plusJakartaVar from "public/fonts/Inter,Plus_Jakarta_Sans/Plus_Jakarta_Sans/PlusJakartaSans-VariableFont_wght.ttf";
 import faviconIco from "public/favicon.ico";
-import iconSvg from "public/yehez-icon.svg";
+import iconSvg from "public/studio-logo.svg";
 
 const plusJakartaFont = new Uint8Array(plusJakartaVar as ArrayBuffer);
 
 const app = new Hono();
+app.route("/", createPwaRoutes());
 app.route(
   "/cards",
   createCardRoutes((input) => renderCardImage(input, renderer, plusJakartaFont)),
@@ -67,7 +70,8 @@ app.use(
             {/* Favicon and Icons */}
             <link rel="icon" type="image/x-icon" href="/favicon.ico" />
             <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-            <link rel="apple-touch-icon" href="/icon.svg" />
+            <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+            <link rel="manifest" href="/manifest.webmanifest" />
 
             {/* Theme and PWA */}
             <meta name="theme-color" content={isCards ? "#f7f3ec" : "#0f172a"} />
@@ -118,7 +122,7 @@ app.use(
 
             <link rel="stylesheet" href="/styles.css" />
           </head>
-          <body class={isCards ? "card-page" : undefined}>{children}</body>
+          <body class={isCards ? "card-page" : undefined}>{children}<PwaClientScript /></body>
         </html>
       );
     },

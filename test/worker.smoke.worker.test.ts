@@ -2,6 +2,19 @@ import { exports } from "cloudflare:workers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 describe("Worker runtime", () => {
+  it.each([
+    ['/icons/icon-192.png', 192], ['/icons/icon-512.png', 512],
+    ['/icons/icon-maskable-512.png', 512], ['/icons/apple-touch-icon.png', 180],
+  ] as const)('serves real installation icon %s', async (path, size) => {
+    const response = await exports.default.fetch(`https://example.com${path}`);
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('image/png');
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    expect(Array.from(bytes.slice(0, 8))).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
+    const header = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    expect(header.getUint32(16)).toBe(size);
+    expect(header.getUint32(20)).toBe(size);
+  });
   it.each(["minimal", "celebratory", "elegant"])("renders %s cards with real WASM at both sizes", async (template) => {
     for (const [size, height] of [["square", 1080], ["portrait", 1350]] as const) {
       const response = await exports.default.fetch("https://example.com/cards/render", {
