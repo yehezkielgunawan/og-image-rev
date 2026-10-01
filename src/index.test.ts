@@ -30,6 +30,62 @@ afterEach(() => {
 });
 
 describe('routes', () => {
+  const card = {
+    occasion: 'birthday', template: 'minimal', theme: 'warm', size: 'square',
+    heading: 'Happy birthday!', recipient: '', message: 'Have a lovely day.', sender: '',
+  };
+
+  it('POST /cards/render returns a private PNG without fetching external assets', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const res = await app.request('/cards/render', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(card),
+    });
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toBe('image/png');
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    expect(res.headers.get('x-content-type-options')).toBe('nosniff');
+    expect((await res.arrayBuffer()).byteLength).toBeGreaterThan(0);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['bad JSON', '{', 'application/json', 400],
+    ['wrong content type', JSON.stringify(card), 'text/plain', 415],
+    ['oversized body', ' '.repeat(16385), 'application/json', 413],
+    ['invalid field', JSON.stringify({ ...card, template: 'unknown' }), 'application/json', 400],
+  ])('POST /cards/render rejects %s', async (_label, body, contentType, status) => {
+    const res = await app.request('/cards/render', {
+      method: 'POST', headers: { 'Content-Type': String(contentType) }, body: String(body),
+    });
+    expect(res.status).toBe(status);
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    expect(await res.json()).toHaveProperty('error');
+    expect(renderMock).not.toHaveBeenCalled();
+  });
+
+  it('enforces actual streamed bytes even if Content-Length understates the size', async () => {
+    const res = await app.request('/cards/render', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': '1' },
+      body: ' '.repeat(16385),
+    });
+    expect(res.status).toBe(413);
+    expect(renderMock).not.toHaveBeenCalled();
+  });
+
+  it('returns a stable card render error without logging card content', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    renderMock.mockRejectedValueOnce(new Error('personal content'));
+    try {
+      const res = await app.request('/cards/render', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(card),
+      });
+      expect(res.status).toBe(500);
+      expect(await res.json()).toEqual({ error: 'Unable to render card. Please try again.' });
+      expect(JSON.stringify(log.mock.calls)).not.toContain('personal content');
+    } finally { log.mockRestore(); }
+  });
+
   it('GET /health returns OK', async () => {
     const res = await app.request('/health');
     expect(res.status).toBe(200);

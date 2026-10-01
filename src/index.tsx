@@ -8,6 +8,8 @@ import { cssStyles } from "./styles.css.js";
 import { fetchImage } from "./og/image";
 import { parseOgParams } from "./og/params";
 import { renderOgImage } from "./og/render";
+import { createCardRoutes } from "./cards/routes";
+import { renderCardImage } from "./cards/render";
 
 // Initialize Takumi WASM
 initSync({ module: wasmModule });
@@ -23,6 +25,10 @@ import iconSvg from "public/yehez-icon.svg";
 const plusJakartaFont = new Uint8Array(plusJakartaVar as ArrayBuffer);
 
 const app = new Hono();
+app.route(
+  "/cards",
+  createCardRoutes((input) => renderCardImage(input, renderer, plusJakartaFont)),
+);
 
 // Set up JSX renderer
 app.use(
