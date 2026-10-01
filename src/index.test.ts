@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest';
+import { runInNewContext } from 'node:vm';
 
 const { renderMock } = vi.hoisted(() => ({
   renderMock: vi.fn(async () => new Uint8Array(10)),
@@ -30,6 +31,84 @@ afterEach(() => {
 });
 
 describe('routes', () => {
+  it('serves an installable studio manifest and links it from both editors', async () => {
+    const res = await app.request('/manifest.webmanifest');
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('application/manifest+json');
+    const manifest = await res.json();
+    expect(manifest).toMatchObject({ name: 'Yehez Image Studio', id: '/', start_url: '/', scope: '/', display: 'standalone' });
+    expect(manifest.icons).toEqual(expect.arrayContaining([
+      expect.objectContaining({ sizes: '192x192', type: 'image/png' }),
+      expect.objectContaining({ sizes: '512x512', purpose: 'maskable' }),
+    ]));
+    for (const path of ['/', '/cards']) {
+      const html = await (await app.request(path)).text();
+      expect(html).toContain('rel="manifest" href="/manifest.webmanifest"');
+      expect(html).toContain('src="/icon.svg"');
+      expect(html).toContain('register("/sw.js"');
+      expect(html).toContain('href="/icons/apple-touch-icon.png"');
+    }
+  });
+
+  it('serves a self-contained offline page with a retry link', async () => {
+    const res = await app.request('/offline');
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain('You’re offline');
+    expect(html).toContain('href="/"');
+    expect(html).toContain('<svg');
+    expect(html).not.toContain('/styles.css');
+    expect(html).not.toContain('<script');
+  });
+
+  it('runs the service worker with offline navigation fallback and isolated cache cleanup', async () => {
+    const res = await app.request('/sw.js');
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('javascript');
+    expect(res.headers.get('cache-control')).toBe('no-cache');
+    const handlers: Record<string, (event: any) => void> = {};
+    const cache = { addAll: vi.fn().mockResolvedValue(undefined), match: vi.fn(async () => new Response('offline')) };
+    const caches = {
+      open: vi.fn(async () => cache),
+      keys: vi.fn(async () => ['yehez-studio-pwa-old', 'other-app']),
+      delete: vi.fn().mockResolvedValue(true),
+    };
+    const fetch = vi.fn(async () => new Response('online'));
+    runInNewContext(await res.text(), {
+      self: { location: { origin: 'https://studio.test' }, addEventListener: (type: string, handler: typeof handlers[string]) => { handlers[type] = handler; } },
+      caches, fetch, URL, Response,
+    });
+    let pending: Promise<unknown> = Promise.resolve();
+    const waitUntil = (promise: Promise<unknown>) => { pending = promise; };
+    handlers.install({ waitUntil });
+    await pending;
+    expect(cache.addAll).toHaveBeenCalledWith(expect.arrayContaining(['/offline', '/icon.svg']));
+    expect(cache.addAll.mock.calls[0][0]).not.toContain('/');
+    expect(cache.addAll.mock.calls[0][0]).not.toContain('/cards');
+    handlers.activate({ waitUntil });
+    await pending;
+    expect(caches.delete).toHaveBeenCalledWith('yehez-studio-pwa-old');
+    expect(caches.delete).not.toHaveBeenCalledWith('other-app');
+    const respondWith = vi.fn((promise) => { pending = promise; });
+    const request = { url: 'https://studio.test/cards', method: 'GET', mode: 'navigate' };
+    handlers.fetch({ request, respondWith });
+    expect(await (await pending as Response).text()).toBe('online');
+    fetch.mockRejectedValueOnce(new TypeError('offline'));
+    handlers.fetch({ request, respondWith });
+    expect(await (await pending as Response).text()).toBe('offline');
+    expect(cache.match).toHaveBeenCalledWith('/offline');
+    for (const bypass of [
+      { ...request, url: 'https://studio.test/og?title=private' },
+      { ...request, url: 'https://studio.test/cards/render', method: 'POST' },
+      { ...request, url: 'https://elsewhere.test/' },
+      { ...request, mode: 'cors' },
+    ]) {
+      respondWith.mockClear();
+      handlers.fetch({ request: bypass, respondWith });
+      expect(respondWith).not.toHaveBeenCalled();
+    }
+  });
+
   const card = {
     occasion: 'birthday', template: 'minimal', theme: 'warm', size: 'square',
     heading: 'Happy birthday!', recipient: '', message: 'Have a lovely day.', sender: '',
