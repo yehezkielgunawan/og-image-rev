@@ -1,11 +1,26 @@
 # og-image-rev
 
-Dynamic Open Graph (OG) image generator powered by:
+Open Graph images and personalized digital greeting cards, powered by:
 - Cloudflare Workers + Hono
 - Takumi (`@takumi-rs/wasm`, `@takumi-rs/helpers`)
 - Plus Jakarta Sans (variable font)
 
-This project exposes a single API endpoint to render 1200x630 OG images with configurable title, description, site name, social, and avatar image.
+The web app offers two editors: Open Graph images at `/`, and **Greeting Card Studio** at `/cards`. Both generate PNGs using the same Worker and WASM renderer.
+
+## Greeting Card Studio
+
+Open `/cards`, choose an occasion, template, color palette, and format, then personalize your heading, message, recipient, and sender. Preview changes automatically and download the finished PNG.
+
+- **Occasions:** Birthday, Thank You, Congratulations, and General Greeting (shown as “Just because”).
+- **Templates:** Minimal, Celebratory, and Elegant.
+- **Palettes:** Rose & cream, Blue & mist, and Ink & paper.
+- **Formats:** Square (1080×1080) and portrait (1080×1350).
+- **Text:** Heading up to 80 characters; message up to 400 characters and 12 explicit lines; optional recipient and sender up to 60 characters each.
+- **Personalization:** Changing an occasion updates suggested wording only when it still matches the previous suggestion. Changing a design keeps your text.
+- **Preview:** Text updates are debounced by 400 ms. Downloads are disabled while the preview is outdated or invalid; failed updates keep the last successful preview visible.
+- **Export:** Downloads use the same PNG as the current preview. Cards are rendered on demand and are not saved in a database.
+
+The bundled Plus Jakarta Sans font supports Latin text, including common accented names such as José, Zoë, and Renée. Emoji and non-Latin script coverage are not guaranteed; decorations use shapes rather than emoji fonts.
 
 ## Quick start (pnpm)
 
@@ -24,12 +39,58 @@ This project exposes a single API endpoint to render 1200x630 OG images with con
   - `pnpm test`
 - Run tests once (CI)
   - `pnpm test:run`
+- Test the real Worker and WASM renderer
+  - `pnpm test:workers`
+- Check application and Worker test types
+  - `pnpm typecheck`
+  - `pnpm typecheck:workers`
 
 Notes:
-- Tests use Vitest and run in a Node environment; external modules like WASM and binary/font assets are mocked.
-- Core routes are covered, including `/`, `/styles.css`, `/health`, `/favicon.ico`, `/icon.svg`, and `/og` with both successful and failed image fetch scenarios.
+- Unit tests run in Node with WASM/font mocks; Worker tests exercise real WASM PNG output and verify card dimensions.
+- Coverage includes OG routes, card validation and rendering, card API errors/body limits, and browser-script behavior such as stale response handling and blob URL cleanup.
 
 ## API
+
+### POST /cards/render
+
+Accepts `Content-Type: application/json` and returns an `image/png`. All eight fields below must be provided; optional names should be empty strings when unused.
+
+```json
+{
+  "occasion": "birthday",
+  "template": "minimal",
+  "theme": "warm",
+  "size": "square",
+  "heading": "Happy birthday!",
+  "recipient": "Alex",
+  "message": "Wishing you a wonderful day.\nHere's to the year ahead!",
+  "sender": "Sam"
+}
+```
+
+Allowed values:
+- `occasion`: `birthday`, `thank-you`, `congratulations`, `general`.
+- `template`: `minimal`, `celebratory`, `elegant`.
+- `theme`: `warm`, `cool`, `neutral`.
+- `size`: `square`, `portrait`.
+
+Text limits match the editor above. Surrounding whitespace is trimmed, message line breaks are preserved, and the font size adapts to the amount of text. The server does not truncate card messages.
+
+```sh
+curl "http://127.0.0.1:8787/cards/render" \
+  -H "Content-Type: application/json" \
+  --data '{"occasion":"thank-you","template":"elegant","theme":"cool","size":"portrait","heading":"Thank you!","recipient":"Alex","message":"Your kindness means so much.","sender":"Sam"}' \
+  --output greeting-card.png
+```
+
+Responses:
+- `200`: PNG bytes; `Cache-Control: no-store` and `X-Content-Type-Options: nosniff`.
+- `400`: Invalid JSON or card fields, with `{ "error": "...", "field": "..." }` for field validation errors.
+- `413`: Request exceeds 16 KB, including streamed bodies without a declared length.
+- `415`: Content type is not `application/json`.
+- `500`: `{ "error": "Unable to render card. Please try again." }`.
+
+The card endpoint is intended for the same-origin editor and does not expose cross-origin CORS access. It does not fetch external photos or assets.
 
 ### GET /og
 
@@ -40,12 +101,13 @@ Query params:
 - `description`: string (default: `Description`)
 - `siteName`: string (default: `yehezgun.com`)
 - `social`: string (default: `Twitter: @yehezgun`)
+- `cta`: optional call-to-action text (default: empty)
 - `image`: string (URL). If omitted, defaults to your Cloudinary avatar:
   - `https://res.cloudinary.com/yehez/image/upload/v1646485864/yehez_avatar_transparent_swwqcq.png`
 
 Response headers:
 - `Content-Type: image/png`
-- `Cache-Control: public, max-age=60`
+- `Cache-Control: public, max-age=3600, stale-while-revalidate=86400`
 
 Example (browser):
 ```
@@ -94,11 +156,10 @@ Serves the project’s default favicon from `public/favicon.ico` with:
 
 - Takumi WASM is initialized once at startup:
   - `initSync({ module })` with `@takumi-rs/wasm/takumi_wasm_bg.wasm`
-- Rendering API is synchronous in the WASM build:
-  - `renderer.render(root, 1200, 630, "png")` returns `Uint8Array`
+- Rendering uses `await renderer.render(root, { width, height, format: "png", fonts })` to produce PNG bytes.
 - Output is returned as a Response with a typed `Uint8Array` body
 - Compatibility date:
-  - This project uses a recent `compatibility_date` (2025-09-20). The Takumi docs verify a minimum of `2025-08-03` for WASM initialization; the current date exceeds that.
+   - This project uses `compatibility_date: "2026-09-23"`.
 
 ## Examples
 

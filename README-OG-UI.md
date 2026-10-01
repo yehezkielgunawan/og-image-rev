@@ -1,11 +1,39 @@
-# OG Image Generator UI
+# Image Studio UI
 
-A beautiful, responsive web interface for generating Open Graph images using Hono.js, JSX, and WASM-powered rendering.
+A responsive web interface for generating Open Graph images and greeting cards using Hono, JSX, and WASM-powered rendering. Shared navigation connects the OG editor at `/` and Greeting Card Studio at `/cards`.
 
-## Features
+## Greeting Card Studio
+
+1. Visit `http://localhost:8787/cards`.
+2. Choose Birthday, Thank You, Congratulations, or Just Because.
+3. Select a Minimal, Celebratory, or Elegant template, one of three color palettes, and square or portrait output.
+4. Personalize your heading and message. Recipient and sender names are optional.
+5. Wait for “Ready to send”, then click **Download PNG**.
+
+The preview updates after 400 ms of typing, or immediately when a design selection changes. Occasion changes preserve personalized wording; template, palette, and format changes preserve all text. **Start fresh** restores the birthday defaults and clears optional names.
+
+The editor supports 80-character headings, 400-character messages with up to 12 explicit lines, and 60-character names. Invalid fields show an error. Downloads stay disabled until the latest preview has successfully loaded. An unsuccessful update keeps the previous card visible.
+
+Output is PNG: square **1080×1080** or portrait **1080×1350**. The downloaded file matches the preview. Cards are not persisted or assigned recipient-facing share links.
+
+### Greeting-card implementation
+
+- `src/cards/config.ts`: shared presets, palettes, formats, and limits.
+- `src/cards/params.ts`: server-side card validation.
+- `src/cards/templates/`: three Takumi node layouts and shared adaptive typography.
+- `src/cards/render.ts` and `src/cards/routes.ts`: `POST /cards/render`.
+- `src/cards/client.ts`: debouncing, request ordering, image decoding, download, and blob cleanup.
+- `src/cards/styles.ts`: scoped greeting-card and navigation styles.
+- `src/components/GreetingCardGenerator.tsx`: server-rendered editor.
+- `src/components/GreetingCardClientScript.tsx`: inline browser enhancement.
+- `src/components/GeneratorNavigation.tsx`: shared navigation.
+
+Run `pnpm test:run`, `pnpm test:workers`, `pnpm typecheck`, and `pnpm typecheck:workers` to verify the feature. See [README.md](README.md#post-cardsrender) for the JSON API contract.
+
+## Open Graph features
 
 ### 🎨 Interactive UI
-- **Real-time Preview**: See your OG image update as you type with 500ms debouncing
+- **Real-time Preview**: See your OG image update as you type with 400ms debouncing
 - **Responsive Design**: Works perfectly on desktop, tablet, and mobile devices
 - **Clean Interface**: Minimalist design focusing on usability
 

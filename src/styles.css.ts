@@ -1,5 +1,8 @@
+import { cardStyles } from "./cards/styles";
+
 // CSS as a template string for clean import
 export const cssStyles = `
+${cardStyles}
 /* Reset and Base Styles */
 * {
     box-sizing: border-box;
