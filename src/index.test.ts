@@ -35,6 +35,27 @@ describe('routes', () => {
     heading: 'Happy birthday!', recipient: '', message: 'Have a lovely day.', sender: '',
   };
 
+  it('serves the greeting editor with its own metadata, controls, and active navigation', async () => {
+    const res = await app.request('/cards');
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain('Greeting Card Studio');
+    expect(html).toContain('id="card-form"');
+    expect(html).toContain('id="card-message"');
+    expect(html).toContain('maxlength="400"');
+    expect(html).toContain('Portrait');
+    expect(html).toContain('Celebratory');
+    expect(html).toContain('Elegant');
+    expect(html).toContain('aria-current="page"');
+    expect(html).toContain('workers.dev/cards');
+    expect(html).toContain('Download PNG');
+  });
+
+  it('links the existing OG generator to greeting cards', async () => {
+    const html = await (await app.request('/')).text();
+    expect(html).toContain('href="/cards"');
+  });
+
   it('POST /cards/render returns a private PNG without fetching external assets', async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
