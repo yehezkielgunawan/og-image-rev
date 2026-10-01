@@ -4,7 +4,8 @@ export const cardStyles = `
   display: flex; align-items: center; justify-content: space-between; gap: 20px;
   border-bottom: 1px solid #e1ddd4; color: #393c32;
 }
-.studio-brand { font-weight: 750; text-decoration: none; color: inherit; letter-spacing: -.02em; }
+.studio-brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 750; text-decoration: none; color: inherit; letter-spacing: -.02em; }
+.studio-brand img { flex: none; border-radius: 8px; }
 .studio-brand span { font-weight: 400; color: #757668; }
 .studio-nav-links { display: flex; gap: 6px; }
 .studio-nav-links a { padding: 8px 14px; text-decoration: none; color: #686b60; font-size: 14px; border-radius: 6px; }

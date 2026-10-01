@@ -19,6 +19,7 @@
         "**/*.woff2",
         "**/*.ico",
         "**/*.svg",
+        "**/*.png",
         "**/*.css",
       ],
       "fallthrough": true,

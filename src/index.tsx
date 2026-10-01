@@ -23,7 +23,7 @@ const renderer = new Renderer();
 // Load Plus Jakarta Sans variable font (single file to avoid glyph mixing)
 import plusJakartaVar from "public/fonts/Inter,Plus_Jakarta_Sans/Plus_Jakarta_Sans/PlusJakartaSans-VariableFont_wght.ttf";
 import faviconIco from "public/favicon.ico";
-import iconSvg from "public/yehez-icon.svg";
+import iconSvg from "public/studio-logo.svg";
 
 const plusJakartaFont = new Uint8Array(plusJakartaVar as ArrayBuffer);
 

@@ -1,7 +1,20 @@
 import { defineConfig } from 'vitest/config';
 import { resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
 
 export default defineConfig({
+  plugins: [{
+    name: 'studio-assets',
+    resolveId(id) {
+      if (id === 'public/studio-logo.svg' || id.startsWith('public/icons/')) return '\0' + id;
+    },
+    load(id) {
+      if (id.startsWith('\0public/')) {
+        const bytes = readFileSync(resolve(import.meta.dirname, id.slice(1)));
+        return `export default new Uint8Array(${JSON.stringify(Array.from(bytes))}).buffer;`;
+      }
+    },
+  }],
   test: {
     environment: 'node',
     include: ['src/**/*.test.{ts,tsx}'],
