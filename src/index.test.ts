@@ -31,18 +31,19 @@ afterEach(() => {
 });
 
 describe('routes', () => {
-  it('serves deployment-aware documentation and links it from both editors', async () => {
+  it('documents the official public domain even when served from another origin', async () => {
     const res = await app.request('https://studio.example/docs');
     expect(res.status).toBe(200);
     const html = await res.text();
     expect(html).toContain('<title>Docs &amp; API');
-    expect(html).toContain('href="https://studio.example/docs"');
+    expect(html).toContain('href="https://og-image-rev.yehezgun.com/docs"');
     expect(html).toContain('href="/docs" aria-current="page"');
     for (const section of ['web-app', 'og-api', 'cards-api', 'errors']) {
       expect(html).toContain(`id="${section}"`);
     }
-    expect(html).toContain('https://studio.example/cards/render');
-    expect(html).toContain('https://studio.example/og?');
+    expect(html).toContain('https://og-image-rev.yehezgun.com/cards/render');
+    expect(html).toContain('https://og-image-rev.yehezgun.com/og?');
+    expect(html).not.toContain('https://studio.example');
     expect(html).toContain('URL.createObjectURL');
     expect(html).toContain('URL.revokeObjectURL');
     expect(html).not.toContain('FORM_FIELD_IDS');
@@ -50,6 +51,14 @@ describe('routes', () => {
     for (const path of ['/', '/cards']) {
       expect(await (await app.request(path)).text()).toContain('href="/docs"');
     }
+  });
+
+  it.each(['/', '/cards', '/docs'])('uses the public domain for canonical and social metadata on %s', async (path) => {
+    const html = await (await app.request(`https://alternate.example${path}`)).text();
+    expect(html).toContain(`rel="canonical" href="https://og-image-rev.yehezgun.com${path}"`);
+    expect(html).toContain(`property="og:url" content="https://og-image-rev.yehezgun.com${path}"`);
+    expect(html).toContain('property="og:image" content="https://og-image-rev.yehezgun.com/og?');
+    expect(html).toContain('name="twitter:image" content="https://og-image-rev.yehezgun.com/og?');
   });
 
   it.each([['/og', 'GET'], ['/cards/render', 'POST']])('allows cross-origin preflight for %s', async (path, method) => {
@@ -163,7 +172,7 @@ describe('routes', () => {
     expect(html).toContain('Celebratory');
     expect(html).toContain('Elegant');
     expect(html).toContain('aria-current="page"');
-    expect(html).toContain('workers.dev/cards');
+    expect(html).toContain('og-image-rev.yehezgun.com/cards');
     expect(html).toContain('Download PNG');
   });
 

@@ -1,4 +1,5 @@
 import type { Child } from "hono/jsx";
+import { SITE_ORIGIN } from "../config";
 import { OG_DEFAULTS, OG_FIELD_LIMITS, IMAGE_FETCH_LIMITS } from "../og/config";
 import { OG_IMAGE_WIDTH, OG_IMAGE_HEIGHT } from "../og/render";
 import { CARD_DEFAULTS, CARD_FIELD_LIMITS, CARD_MAX_BODY_BYTES, CARD_MAX_MESSAGE_LINES, CARD_OCCASIONS, CARD_SIZES, CARD_TEMPLATES, CARD_THEMES } from "../cards/config";
@@ -15,7 +16,8 @@ function ReferenceTable({ caption, headings, rows }: { caption: string; headings
   </div>;
 }
 
-export function DocumentationPage({ origin }: { origin: string }) {
+export function DocumentationPage() {
+  const origin = SITE_ORIGIN;
   const ogUrl = `${origin}/og?${new URLSearchParams({ title: "A story worth sharing", description: "Notes from my corner of the web", siteName: "example.com" })}`;
   const sampleCard = { ...CARD_DEFAULTS, recipient: "Alex", message: "Wishing you a wonderful year ahead!", sender: "Sam" };
   const cardJson = JSON.stringify(sampleCard, null, 2);
@@ -31,6 +33,7 @@ export function DocumentationPage({ origin }: { origin: string }) {
       <p class="docs-eyebrow">YEHEZ IMAGE STUDIO / FIELD GUIDE</p>
       <h1>Make an image.<br /><em>Build it into anything.</em></h1>
       <p class="docs-lead">Create in the studio, or generate PNGs from your own website. Two public APIs, ready to use. No account or API key required.</p>
+      <p>Official website and API base: <a href={`${origin}/`}>{origin}</a>. All examples below use this public domain. For local development or your own deployment, replace the base URL.</p>
       <div class="docs-endpoints"><a href="#og-api"><span>GET</span> /og <span aria-hidden="true">↗</span></a><a href="#cards-api"><span>POST</span> /cards/render <span aria-hidden="true">↗</span></a></div>
     </header>
     <div class="docs-layout">

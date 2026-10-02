@@ -4,6 +4,7 @@ import wasmModule from "@takumi-rs/wasm/auto";
 import { jsxRenderer } from "hono/jsx-renderer";
 import { cors } from "hono/cors";
 import { DocumentationPage } from "./components/DocumentationPage";
+import { SITE_ORIGIN } from "./config";
 import { OGImageGenerator } from "./components/OGImageGenerator";
 import { ClientScript } from "./components/ClientScript";
 import { cssStyles } from "./styles.css.js";
@@ -54,8 +55,9 @@ app.use(
         : isCards
         ? "Create a personalized greeting card for birthdays, thank-you notes, congratulations, or just because. Choose a design and download a PNG."
         : "Create beautiful Open Graph images for your website with our easy-to-use generator. Customize title, description, and branding for perfect social media previews.";
-      const pageUrl = isDocs ? `${new URL(c.req.url).origin}/docs` : `https://og-image-rev.yehezkielgunawan.workers.dev${isCards ? "/cards" : "/"}`;
-      const socialImage = isDocs ? "/og?title=Docs%20%26%20API&description=Build%20with%20Yehez%20Image%20Studio" : isCards ? "/og?title=Greeting%20Card%20Studio&description=A%20little%20card.%20A%20lot%20of%20meaning." : "/og?title=OG%20Image%20Generator&description=Create%20beautiful%20Open%20Graph%20images%20for%20your%20website";
+      const pageUrl = `${SITE_ORIGIN}${isDocs ? "/docs" : isCards ? "/cards" : "/"}`;
+      const socialImagePath = isDocs ? "/og?title=Docs%20%26%20API&description=Build%20with%20Yehez%20Image%20Studio" : isCards ? "/og?title=Greeting%20Card%20Studio&description=A%20little%20card.%20A%20lot%20of%20meaning." : "/og?title=OG%20Image%20Generator&description=Create%20beautiful%20Open%20Graph%20images%20for%20your%20website";
+      const socialImage = `${SITE_ORIGIN}${socialImagePath}`;
       return (
         <html lang="en">
           <head>
@@ -164,7 +166,7 @@ app.get("/cards", (c) => {
 app.get("/docs", (c) => c.render(
   <div>
     <GeneratorNavigation active="docs" />
-    <DocumentationPage origin={new URL(c.req.url).origin} />
+    <DocumentationPage />
   </div>,
 ));
 
