@@ -31,6 +31,52 @@ afterEach(() => {
 });
 
 describe('routes', () => {
+  it('documents the official public domain even when served from another origin', async () => {
+    const res = await app.request('https://studio.example/docs');
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain('<title>Docs &amp; API');
+    expect(html).toContain('href="https://og-image-rev.yehezgun.com/docs"');
+    expect(html).toContain('href="/docs" aria-current="page"');
+    for (const section of ['web-app', 'og-api', 'cards-api', 'errors']) {
+      expect(html).toContain(`id="${section}"`);
+    }
+    expect(html).toContain('https://og-image-rev.yehezgun.com/cards/render');
+    expect(html).toContain('https://og-image-rev.yehezgun.com/og?');
+    expect(html).not.toContain('https://studio.example');
+    expect(html).toContain('URL.createObjectURL');
+    expect(html).toContain('URL.revokeObjectURL');
+    expect(html).not.toContain('FORM_FIELD_IDS');
+    expect(html).not.toContain('id="card-form"');
+    for (const path of ['/', '/cards']) {
+      expect(await (await app.request(path)).text()).toContain('href="/docs"');
+    }
+  });
+
+  it.each(['/', '/cards', '/docs'])('uses the public domain for canonical and social metadata on %s', async (path) => {
+    const html = await (await app.request(`https://alternate.example${path}`)).text();
+    expect(html).toContain(`rel="canonical" href="https://og-image-rev.yehezgun.com${path}"`);
+    expect(html).toContain(`property="og:url" content="https://og-image-rev.yehezgun.com${path}"`);
+    expect(html).toContain('property="og:image" content="https://og-image-rev.yehezgun.com/og?');
+    expect(html).toContain('name="twitter:image" content="https://og-image-rev.yehezgun.com/og?');
+  });
+
+  it.each([['/og', 'GET'], ['/cards/render', 'POST']])('allows cross-origin preflight for %s', async (path, method) => {
+    const res = await app.request(path, {
+      method: 'OPTIONS', headers: {
+        Origin: 'https://another-site.example',
+        'Access-Control-Request-Method': method,
+        'Access-Control-Request-Headers': 'content-type',
+      },
+    });
+    expect(res.status).toBe(204);
+    expect(res.headers.get('access-control-allow-origin')).toBe('*');
+    expect(res.headers.get('access-control-allow-methods')?.split(',')).toContain(method);
+    expect(res.headers.get('access-control-allow-headers')?.toLowerCase()).toContain('content-type');
+    expect(res.headers.get('access-control-max-age')).toBe('86400');
+    expect(renderMock).not.toHaveBeenCalled();
+  });
+
   it('serves an installable studio manifest and links it from both editors', async () => {
     const res = await app.request('/manifest.webmanifest');
     expect(res.status).toBe(200);
@@ -126,7 +172,7 @@ describe('routes', () => {
     expect(html).toContain('Celebratory');
     expect(html).toContain('Elegant');
     expect(html).toContain('aria-current="page"');
-    expect(html).toContain('workers.dev/cards');
+    expect(html).toContain('og-image-rev.yehezgun.com/cards');
     expect(html).toContain('Download PNG');
   });
 
@@ -144,6 +190,7 @@ describe('routes', () => {
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toBe('image/png');
     expect(res.headers.get('cache-control')).toBe('no-store');
+    expect(res.headers.get('access-control-allow-origin')).toBe('*');
     expect(res.headers.get('x-content-type-options')).toBe('nosniff');
     expect((await res.arrayBuffer()).byteLength).toBeGreaterThan(0);
     expect(fetchMock).not.toHaveBeenCalled();
@@ -159,6 +206,7 @@ describe('routes', () => {
       method: 'POST', headers: { 'Content-Type': String(contentType) }, body: String(body),
     });
     expect(res.status).toBe(status);
+    expect(res.headers.get('access-control-allow-origin')).toBe('*');
     expect(res.headers.get('cache-control')).toBe('no-store');
     expect(await res.json()).toHaveProperty('error');
     expect(renderMock).not.toHaveBeenCalled();
@@ -181,6 +229,7 @@ describe('routes', () => {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(card),
       });
       expect(res.status).toBe(500);
+      expect(res.headers.get('access-control-allow-origin')).toBe('*');
       expect(await res.json()).toEqual({ error: 'Unable to render card. Please try again.' });
       expect(JSON.stringify(log.mock.calls)).not.toContain('personal content');
     } finally { log.mockRestore(); }
@@ -268,6 +317,7 @@ describe('routes', () => {
     const res = await app.request(`/og?title=${'x'.repeat(101)}`);
 
     expect(res.status).toBe(400);
+    expect(res.headers.get('access-control-allow-origin')).toBe('*');
     expect(await res.json()).toEqual({
       error: 'title exceeds the maximum length',
     });
@@ -303,6 +353,7 @@ describe('routes', () => {
 
     expect(res.status).toBe(500);
     expect(await res.json()).toEqual({ error: 'Unable to render image' });
+    expect(res.headers.get('access-control-allow-origin')).toBe('*');
     expect(res.headers.get('cache-control')).toBe('no-store');
   });
 });

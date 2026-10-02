@@ -2,6 +2,9 @@ import { Hono } from "hono";
 import { initSync, Renderer } from "@takumi-rs/wasm";
 import wasmModule from "@takumi-rs/wasm/auto";
 import { jsxRenderer } from "hono/jsx-renderer";
+import { cors } from "hono/cors";
+import { DocumentationPage } from "./components/DocumentationPage";
+import { SITE_ORIGIN } from "./config";
 import { OGImageGenerator } from "./components/OGImageGenerator";
 import { ClientScript } from "./components/ClientScript";
 import { cssStyles } from "./styles.css.js";
@@ -30,6 +33,9 @@ import iconSvg from "public/studio-logo.svg";
 const plusJakartaFont = new Uint8Array(plusJakartaVar as ArrayBuffer);
 
 const app = new Hono();
+// Register before rendering routes so PNGs and JSON errors share the same policy.
+app.use("/og", cors({ origin: "*", allowMethods: ["GET", "OPTIONS"], allowHeaders: ["Content-Type"], maxAge: 86400 }));
+app.use("/cards/render", cors({ origin: "*", allowMethods: ["POST", "OPTIONS"], allowHeaders: ["Content-Type"], maxAge: 86400 }));
 app.route("/", createPwaRoutes());
 app.route(
   "/cards",
@@ -42,12 +48,16 @@ app.use(
   jsxRenderer(
     ({ children }, c) => {
       const isCards = c.req.path === "/cards";
-      const title = isCards ? "Greeting Card Studio - Make a Note Worth Keeping" : "OG Image Generator - Create Beautiful Open Graph Images";
-      const description = isCards
+      const isDocs = c.req.path === "/docs";
+      const title = isDocs ? "Docs & API - Yehez Image Studio" : isCards ? "Greeting Card Studio - Make a Note Worth Keeping" : "OG Image Generator - Create Beautiful Open Graph Images";
+      const description = isDocs
+        ? "Learn to create Open Graph images and greeting cards, and integrate both public PNG APIs into your website."
+        : isCards
         ? "Create a personalized greeting card for birthdays, thank-you notes, congratulations, or just because. Choose a design and download a PNG."
         : "Create beautiful Open Graph images for your website with our easy-to-use generator. Customize title, description, and branding for perfect social media previews.";
-      const pageUrl = `https://og-image-rev.yehezkielgunawan.workers.dev${isCards ? "/cards" : "/"}`;
-      const socialImage = isCards ? "/og?title=Greeting%20Card%20Studio&description=A%20little%20card.%20A%20lot%20of%20meaning." : "/og?title=OG%20Image%20Generator&description=Create%20beautiful%20Open%20Graph%20images%20for%20your%20website";
+      const pageUrl = `${SITE_ORIGIN}${isDocs ? "/docs" : isCards ? "/cards" : "/"}`;
+      const socialImagePath = isDocs ? "/og?title=Docs%20%26%20API&description=Build%20with%20Yehez%20Image%20Studio" : isCards ? "/og?title=Greeting%20Card%20Studio&description=A%20little%20card.%20A%20lot%20of%20meaning." : "/og?title=OG%20Image%20Generator&description=Create%20beautiful%20Open%20Graph%20images%20for%20your%20website";
+      const socialImage = `${SITE_ORIGIN}${socialImagePath}`;
       return (
         <html lang="en">
           <head>
@@ -122,7 +132,7 @@ app.use(
 
             <link rel="stylesheet" href="/styles.css" />
           </head>
-          <body class={isCards ? "card-page" : undefined}>{children}<PwaClientScript /></body>
+          <body class={isDocs ? "docs-page" : isCards ? "card-page" : undefined}>{children}<PwaClientScript /></body>
         </html>
       );
     },
@@ -152,6 +162,13 @@ app.get("/cards", (c) => {
     </div>,
   );
 });
+
+app.get("/docs", (c) => c.render(
+  <div>
+    <GeneratorNavigation active="docs" />
+    <DocumentationPage />
+  </div>,
+));
 
 // Serve CSS file
 app.get("/styles.css", async (c) => {
@@ -190,19 +207,6 @@ app.get(
     }),
 );
 
-// Handle CORS preflight for /og endpoint
-app.options("/og", (c) => {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Access-Control-Max-Age": "86400",
-    },
-  });
-});
-
 app.get("/og", async (c) => {
   const parsed = parseOgParams(new URL(c.req.url).searchParams);
   if (!parsed.ok) {
@@ -227,8 +231,6 @@ app.get("/og", async (c) => {
         "Content-Type": "image/png",
         "Cache-Control":
           "public, max-age=3600, stale-while-revalidate=86400",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
         "X-Content-Type-Options": "nosniff",
         "Content-Length": body.byteLength.toString(),
       },

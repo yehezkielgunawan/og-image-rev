@@ -1,8 +1,10 @@
 import { cardStyles } from "./cards/styles";
+import { docsStyles } from "./docs/styles";
 
 // CSS as a template string for clean import
 export const cssStyles = `
 ${cardStyles}
+${docsStyles}
 /* Reset and Base Styles */
 * {
     box-sizing: border-box;

@@ -7,6 +7,10 @@ Open Graph images and personalized digital greeting cards, powered by:
 
 The web app offers two editors: Open Graph images at `/`, and **Greeting Card Studio** at `/cards`. Both generate PNGs using the same Worker and WASM renderer.
 
+**Official website and API base:** https://og-image-rev.yehezgun.com
+
+The [Docs & API guide](https://og-image-rev.yehezgun.com/docs) covers both editors and includes parameter references and integration examples.
+
 ## Install as an app
 
 **Yehez Image Studio** supports installation through the browser’s install menu on supported desktop and mobile browsers. On iPhone/iPad, use Safari’s **Share → Add to Home Screen**. Installation requires HTTPS (localhost works for development).
@@ -41,6 +45,8 @@ The bundled Plus Jakarta Sans font supports Latin text, including common accente
 - Generate/sync Worker types
   - `pnpm cf-typegen`
 
+`wrangler.jsonc` declares `og-image-rev.yehezgun.com` as a Worker Custom Domain. Deployments manage this domain through Wrangler; Cloudflare handles its DNS record and TLS certificate. The shared public origin for documentation and page metadata is defined in `src/config.ts`. For local API calls, replace the public base URL with the origin printed by `pnpm dev` (normally `http://localhost:8787`).
+
 ## Testing
 
 - Run tests in watch mode
@@ -58,6 +64,8 @@ Notes:
 - Coverage includes OG routes, card validation and rendering, card API errors/body limits, and browser-script behavior such as stale response handling and blob URL cleanup.
 
 ## API
+
+Base URL: `https://og-image-rev.yehezgun.com`. Both rendering APIs support cross-origin browser requests, including OPTIONS preflight and JSON error responses. No API key is required.
 
 ### POST /cards/render
 
@@ -85,7 +93,7 @@ Allowed values:
 Text limits match the editor above. Surrounding whitespace is trimmed, message line breaks are preserved, and the font size adapts to the amount of text. The server does not truncate card messages.
 
 ```sh
-curl "http://127.0.0.1:8787/cards/render" \
+curl "https://og-image-rev.yehezgun.com/cards/render" \
   -H "Content-Type: application/json" \
   --data '{"occasion":"thank-you","template":"elegant","theme":"cool","size":"portrait","heading":"Thank you!","recipient":"Alex","message":"Your kindness means so much.","sender":"Sam"}' \
   --output greeting-card.png
@@ -98,7 +106,7 @@ Responses:
 - `415`: Content type is not `application/json`.
 - `500`: `{ "error": "Unable to render card. Please try again." }`.
 
-The card endpoint is intended for the same-origin editor and does not expose cross-origin CORS access. It does not fetch external photos or assets.
+The card endpoint supports both the studio editor and cross-origin API clients. It does not fetch external photos or assets.
 
 ### GET /og
 
@@ -119,12 +127,12 @@ Response headers:
 
 Example (browser):
 ```
-http://127.0.0.1:8787/og?title=Hello%20World&description=Composable%20OG%20images&siteName=yehezgun.com&social=Twitter:%20@yehezgun
+https://og-image-rev.yehezgun.com/og?title=Hello%20World&description=Composable%20OG%20images&siteName=yehezgun.com&social=Twitter:%20@yehezgun
 ```
 
 Example (cURL):
 ```sh
-curl "http://127.0.0.1:8787/og?title=My%20Long%20Title&description=This%20is%20a%20description" --output og.png
+curl "https://og-image-rev.yehezgun.com/og?title=My%20Long%20Title&description=This%20is%20a%20description" --output og.png
 ```
 
 ### GET /favicon.ico
