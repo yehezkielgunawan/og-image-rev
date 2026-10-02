@@ -3,6 +3,7 @@ import { initSync, Renderer } from "@takumi-rs/wasm";
 import wasmModule from "@takumi-rs/wasm/auto";
 import { jsxRenderer } from "hono/jsx-renderer";
 import { cors } from "hono/cors";
+import { DocumentationPage } from "./components/DocumentationPage";
 import { OGImageGenerator } from "./components/OGImageGenerator";
 import { ClientScript } from "./components/ClientScript";
 import { cssStyles } from "./styles.css.js";
@@ -46,12 +47,15 @@ app.use(
   jsxRenderer(
     ({ children }, c) => {
       const isCards = c.req.path === "/cards";
-      const title = isCards ? "Greeting Card Studio - Make a Note Worth Keeping" : "OG Image Generator - Create Beautiful Open Graph Images";
-      const description = isCards
+      const isDocs = c.req.path === "/docs";
+      const title = isDocs ? "Docs & API - Yehez Image Studio" : isCards ? "Greeting Card Studio - Make a Note Worth Keeping" : "OG Image Generator - Create Beautiful Open Graph Images";
+      const description = isDocs
+        ? "Learn to create Open Graph images and greeting cards, and integrate both public PNG APIs into your website."
+        : isCards
         ? "Create a personalized greeting card for birthdays, thank-you notes, congratulations, or just because. Choose a design and download a PNG."
         : "Create beautiful Open Graph images for your website with our easy-to-use generator. Customize title, description, and branding for perfect social media previews.";
-      const pageUrl = `https://og-image-rev.yehezkielgunawan.workers.dev${isCards ? "/cards" : "/"}`;
-      const socialImage = isCards ? "/og?title=Greeting%20Card%20Studio&description=A%20little%20card.%20A%20lot%20of%20meaning." : "/og?title=OG%20Image%20Generator&description=Create%20beautiful%20Open%20Graph%20images%20for%20your%20website";
+      const pageUrl = isDocs ? `${new URL(c.req.url).origin}/docs` : `https://og-image-rev.yehezkielgunawan.workers.dev${isCards ? "/cards" : "/"}`;
+      const socialImage = isDocs ? "/og?title=Docs%20%26%20API&description=Build%20with%20Yehez%20Image%20Studio" : isCards ? "/og?title=Greeting%20Card%20Studio&description=A%20little%20card.%20A%20lot%20of%20meaning." : "/og?title=OG%20Image%20Generator&description=Create%20beautiful%20Open%20Graph%20images%20for%20your%20website";
       return (
         <html lang="en">
           <head>
@@ -126,7 +130,7 @@ app.use(
 
             <link rel="stylesheet" href="/styles.css" />
           </head>
-          <body class={isCards ? "card-page" : undefined}>{children}<PwaClientScript /></body>
+          <body class={isDocs ? "docs-page" : isCards ? "card-page" : undefined}>{children}<PwaClientScript /></body>
         </html>
       );
     },
@@ -156,6 +160,13 @@ app.get("/cards", (c) => {
     </div>,
   );
 });
+
+app.get("/docs", (c) => c.render(
+  <div>
+    <GeneratorNavigation active="docs" />
+    <DocumentationPage origin={new URL(c.req.url).origin} />
+  </div>,
+));
 
 // Serve CSS file
 app.get("/styles.css", async (c) => {

@@ -31,6 +31,27 @@ afterEach(() => {
 });
 
 describe('routes', () => {
+  it('serves deployment-aware documentation and links it from both editors', async () => {
+    const res = await app.request('https://studio.example/docs');
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain('<title>Docs &amp; API');
+    expect(html).toContain('href="https://studio.example/docs"');
+    expect(html).toContain('href="/docs" aria-current="page"');
+    for (const section of ['web-app', 'og-api', 'cards-api', 'errors']) {
+      expect(html).toContain(`id="${section}"`);
+    }
+    expect(html).toContain('https://studio.example/cards/render');
+    expect(html).toContain('https://studio.example/og?');
+    expect(html).toContain('URL.createObjectURL');
+    expect(html).toContain('URL.revokeObjectURL');
+    expect(html).not.toContain('FORM_FIELD_IDS');
+    expect(html).not.toContain('id="card-form"');
+    for (const path of ['/', '/cards']) {
+      expect(await (await app.request(path)).text()).toContain('href="/docs"');
+    }
+  });
+
   it.each([['/og', 'GET'], ['/cards/render', 'POST']])('allows cross-origin preflight for %s', async (path, method) => {
     const res = await app.request(path, {
       method: 'OPTIONS', headers: {
