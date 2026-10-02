@@ -31,6 +31,22 @@ afterEach(() => {
 });
 
 describe('routes', () => {
+  it.each([['/og', 'GET'], ['/cards/render', 'POST']])('allows cross-origin preflight for %s', async (path, method) => {
+    const res = await app.request(path, {
+      method: 'OPTIONS', headers: {
+        Origin: 'https://another-site.example',
+        'Access-Control-Request-Method': method,
+        'Access-Control-Request-Headers': 'content-type',
+      },
+    });
+    expect(res.status).toBe(204);
+    expect(res.headers.get('access-control-allow-origin')).toBe('*');
+    expect(res.headers.get('access-control-allow-methods')?.split(',')).toContain(method);
+    expect(res.headers.get('access-control-allow-headers')?.toLowerCase()).toContain('content-type');
+    expect(res.headers.get('access-control-max-age')).toBe('86400');
+    expect(renderMock).not.toHaveBeenCalled();
+  });
+
   it('serves an installable studio manifest and links it from both editors', async () => {
     const res = await app.request('/manifest.webmanifest');
     expect(res.status).toBe(200);
@@ -144,6 +160,7 @@ describe('routes', () => {
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toBe('image/png');
     expect(res.headers.get('cache-control')).toBe('no-store');
+    expect(res.headers.get('access-control-allow-origin')).toBe('*');
     expect(res.headers.get('x-content-type-options')).toBe('nosniff');
     expect((await res.arrayBuffer()).byteLength).toBeGreaterThan(0);
     expect(fetchMock).not.toHaveBeenCalled();
@@ -159,6 +176,7 @@ describe('routes', () => {
       method: 'POST', headers: { 'Content-Type': String(contentType) }, body: String(body),
     });
     expect(res.status).toBe(status);
+    expect(res.headers.get('access-control-allow-origin')).toBe('*');
     expect(res.headers.get('cache-control')).toBe('no-store');
     expect(await res.json()).toHaveProperty('error');
     expect(renderMock).not.toHaveBeenCalled();
@@ -181,6 +199,7 @@ describe('routes', () => {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(card),
       });
       expect(res.status).toBe(500);
+      expect(res.headers.get('access-control-allow-origin')).toBe('*');
       expect(await res.json()).toEqual({ error: 'Unable to render card. Please try again.' });
       expect(JSON.stringify(log.mock.calls)).not.toContain('personal content');
     } finally { log.mockRestore(); }
@@ -268,6 +287,7 @@ describe('routes', () => {
     const res = await app.request(`/og?title=${'x'.repeat(101)}`);
 
     expect(res.status).toBe(400);
+    expect(res.headers.get('access-control-allow-origin')).toBe('*');
     expect(await res.json()).toEqual({
       error: 'title exceeds the maximum length',
     });
@@ -303,6 +323,7 @@ describe('routes', () => {
 
     expect(res.status).toBe(500);
     expect(await res.json()).toEqual({ error: 'Unable to render image' });
+    expect(res.headers.get('access-control-allow-origin')).toBe('*');
     expect(res.headers.get('cache-control')).toBe('no-store');
   });
 });

@@ -2,6 +2,18 @@ import { exports } from "cloudflare:workers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 describe("Worker runtime", () => {
+  it.each([['/og', 'GET'], ['/cards/render', 'POST']])('handles cross-origin preflight for %s', async (path, method) => {
+    const response = await exports.default.fetch(`https://example.com${path}`, {
+      method: 'OPTIONS', headers: {
+        Origin: 'https://consumer.example',
+        'Access-Control-Request-Method': method,
+        'Access-Control-Request-Headers': 'content-type',
+      },
+    });
+    expect(response.status).toBe(204);
+    expect(response.headers.get('access-control-allow-origin')).toBe('*');
+    expect(response.headers.get('access-control-allow-methods')?.split(',')).toContain(method);
+  });
   it.each([
     ['/icons/icon-192.png', 192], ['/icons/icon-512.png', 512],
     ['/icons/icon-maskable-512.png', 512], ['/icons/apple-touch-icon.png', 180],
@@ -18,13 +30,14 @@ describe("Worker runtime", () => {
   it.each(["minimal", "celebratory", "elegant"])("renders %s cards with real WASM at both sizes", async (template) => {
     for (const [size, height] of [["square", 1080], ["portrait", 1350]] as const) {
       const response = await exports.default.fetch("https://example.com/cards/render", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", Origin: "https://consumer.example" },
         body: JSON.stringify({
           occasion: "birthday", template, theme: "warm", size,
           heading: "Happy birthday, José!", recipient: "Zoë", message: "W".repeat(400), sender: "Renée",
         }),
       });
       expect(response.status).toBe(200);
+      expect(response.headers.get('access-control-allow-origin')).toBe('*');
       const png = new Uint8Array(await response.arrayBuffer());
       expect(Array.from(png.slice(0, 8))).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
       const header = new DataView(png.buffer, png.byteOffset, png.byteLength);

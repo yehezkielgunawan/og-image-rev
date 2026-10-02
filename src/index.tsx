@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { initSync, Renderer } from "@takumi-rs/wasm";
 import wasmModule from "@takumi-rs/wasm/auto";
 import { jsxRenderer } from "hono/jsx-renderer";
+import { cors } from "hono/cors";
 import { OGImageGenerator } from "./components/OGImageGenerator";
 import { ClientScript } from "./components/ClientScript";
 import { cssStyles } from "./styles.css.js";
@@ -30,6 +31,9 @@ import iconSvg from "public/studio-logo.svg";
 const plusJakartaFont = new Uint8Array(plusJakartaVar as ArrayBuffer);
 
 const app = new Hono();
+// Register before rendering routes so PNGs and JSON errors share the same policy.
+app.use("/og", cors({ origin: "*", allowMethods: ["GET", "OPTIONS"], allowHeaders: ["Content-Type"], maxAge: 86400 }));
+app.use("/cards/render", cors({ origin: "*", allowMethods: ["POST", "OPTIONS"], allowHeaders: ["Content-Type"], maxAge: 86400 }));
 app.route("/", createPwaRoutes());
 app.route(
   "/cards",
@@ -190,19 +194,6 @@ app.get(
     }),
 );
 
-// Handle CORS preflight for /og endpoint
-app.options("/og", (c) => {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Access-Control-Max-Age": "86400",
-    },
-  });
-});
-
 app.get("/og", async (c) => {
   const parsed = parseOgParams(new URL(c.req.url).searchParams);
   if (!parsed.ok) {
@@ -227,8 +218,6 @@ app.get("/og", async (c) => {
         "Content-Type": "image/png",
         "Cache-Control":
           "public, max-age=3600, stale-while-revalidate=86400",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
         "X-Content-Type-Options": "nosniff",
         "Content-Length": body.byteLength.toString(),
       },
